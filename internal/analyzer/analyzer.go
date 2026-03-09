@@ -1,6 +1,11 @@
 package analyzer
 
-import "golang.org/x/tools/go/analysis"
+import (
+	"go/ast"
+
+	"github.com/reservation-v/log-linter/internal/matchers"
+	"golang.org/x/tools/go/analysis"
+)
 
 var Analyzer = &analysis.Analyzer{
 	Name: "loglinter",
@@ -9,5 +14,24 @@ var Analyzer = &analysis.Analyzer{
 }
 
 func run(pass *analysis.Pass) (any, error) {
-	return nil, nil
+	var calls []matchers.LogCall
+
+	for _, file := range pass.Files {
+		ast.Inspect(file, func(node ast.Node) bool {
+			call, ok := node.(*ast.CallExpr)
+			if !ok {
+				return true
+			}
+
+			logCall, ok := matchers.ExtractLogCall(pass, call)
+			if !ok {
+				return true
+			}
+
+			calls = append(calls, logCall)
+			return true
+		})
+	}
+
+	return calls, nil
 }
