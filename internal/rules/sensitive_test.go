@@ -1,8 +1,11 @@
 package rules
 
 import (
+	"go/ast"
 	"go/parser"
 	"testing"
+
+	"github.com/reservation-v/log-linter/internal/matchers"
 )
 
 func TestCheckSensitiveMessage(t *testing.T) {
@@ -56,4 +59,83 @@ func TestCheckSensitiveMessage(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCheckSensitiveFields(t *testing.T) {
+	tests := []struct {
+		name string
+		kind matchers.LoggerKind
+		expr string
+		want bool
+	}{
+		{
+			name: "slog sensitive key",
+			kind: matchers.LoggerSlog,
+			expr: `slog.Info("request done", "token", token)`,
+			want: true,
+		},
+		{
+			name: "slog sensitive value ident",
+			kind: matchers.LoggerSlog,
+			expr: `slog.Info("request done", "user", apiKey)`,
+			want: true,
+		},
+		{
+			name: "slog safe fields",
+			kind: matchers.LoggerSlog,
+			expr: `slog.Info("request done", "user", userID)`,
+			want: false,
+		},
+		{
+			name: "zap sensitive key",
+			kind: matchers.LoggerZap,
+			expr: `logger.Info("request done", zap.String("token", value))`,
+			want: true,
+		},
+		{
+			name: "zap sensitive value",
+			kind: matchers.LoggerZap,
+			expr: `logger.Info("request done", zap.Any("user", password))`,
+			want: true,
+		},
+		{
+			name: "zap safe field",
+			kind: matchers.LoggerZap,
+			expr: `logger.Info("request done", zap.String("user", userID))`,
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			call := parseCallExpr(t, tt.expr)
+			logCall := matchers.LogCall{
+				Kind:         tt.kind,
+				Call:         call,
+				Message:      call.Args[0],
+				MessageIndex: 0,
+			}
+
+			got := CheckSensitiveFields(logCall) != nil
+			if got != tt.want {
+				t.Fatalf("CheckSensitiveFields(%q) = %v, want %v", tt.expr, got, tt.want)
+			}
+		})
+	}
+}
+
+func parseCallExpr(t *testing.T, expr string) *ast.CallExpr {
+	t.Helper()
+
+	parsed, err := parser.ParseExpr(expr)
+	if err != nil {
+		t.Fatalf("ParseExpr(%q) error = %v", expr, err)
+	}
+
+	call, ok := parsed.(*ast.CallExpr)
+	if !ok {
+		t.Fatalf("ParseExpr(%q) returned %T, want *ast.CallExpr", expr, parsed)
+	}
+
+	return call
 }

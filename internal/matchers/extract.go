@@ -1,5 +1,5 @@
 // this package is made for extracting package names,
-// finding needed packages - slog/zap and giving 
+// finding needed packages - slog/zap and giving
 // analyzer full inf about called function
 package matchers
 
@@ -19,10 +19,11 @@ const (
 
 // main log structure
 type LogCall struct {
-	Kind    LoggerKind
-	Method  string
-	Call    *ast.CallExpr
-	Message ast.Expr
+	Kind         LoggerKind
+	Method       string
+	Call         *ast.CallExpr
+	Message      ast.Expr
+	MessageIndex int
 }
 
 // extrats func package and in switch checks
@@ -40,10 +41,11 @@ func ExtractLogCall(pass *analysis.Pass, call *ast.CallExpr) (LogCall, bool) {
 			return LogCall{}, false
 		}
 		return LogCall{
-			Kind:    LoggerSlog,
-			Method:  fn.Name(),
-			Call:    call,
-			Message: call.Args[idx],
+			Kind:         LoggerSlog,
+			Method:       fn.Name(),
+			Call:         call,
+			Message:      call.Args[idx],
+			MessageIndex: idx,
 		}, true
 	case "go.uber.org/zap":
 		idx, ok := zapMessageIndex(fn)
@@ -51,10 +53,11 @@ func ExtractLogCall(pass *analysis.Pass, call *ast.CallExpr) (LogCall, bool) {
 			return LogCall{}, false
 		}
 		return LogCall{
-			Kind:    LoggerZap,
-			Method:  fn.Name(),
-			Call:    call,
-			Message: call.Args[idx],
+			Kind:         LoggerZap,
+			Method:       fn.Name(),
+			Call:         call,
+			Message:      call.Args[idx],
+			MessageIndex: idx,
 		}, true
 	default:
 		return LogCall{}, false
@@ -122,7 +125,7 @@ func hasStringParam(fn *types.Func, idx int) bool {
 	return ok && basic.Kind() == types.String
 }
 
-// slog has 2 types of output: 
+// slog has 2 types of output:
 // - package level like slog.Info()
 // - methods like logger.Info (logger is an object of type *slog.Logger)
 func isPackageOrReceiver(fn *types.Func, pkgPath, receiver string) bool {

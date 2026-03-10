@@ -22,7 +22,11 @@ var sensitiveKeywords = []string{
 }
 
 func CheckSensitive(logCall matchers.LogCall) *analysis.Diagnostic {
-	return CheckSensitiveMessage(logCall.Message)
+	if diagnostic := CheckSensitiveMessage(logCall.Message); diagnostic != nil {
+		return diagnostic
+	}
+
+	return CheckSensitiveFields(logCall)
 }
 
 func CheckSensitiveMessage(expr ast.Expr) *analysis.Diagnostic {
@@ -34,6 +38,59 @@ func CheckSensitiveMessage(expr ast.Expr) *analysis.Diagnostic {
 		Pos:     expr.Pos(),
 		Message: SensitiveMessageDiagnostic,
 	}
+}
+
+func CheckSensitiveFields(logCall matchers.LogCall) *analysis.Diagnostic {
+	args := logCall.Call.Args
+	if len(args) <= logCall.MessageIndex+1 {
+		return nil
+	}
+
+	switch logCall.Kind {
+	case matchers.LoggerSlog:
+		return checkSensitiveSlogFields(args[logCall.MessageIndex+1:])
+	case matchers.LoggerZap:
+		return checkSensitiveZapFields(args[logCall.MessageIndex+1:])
+	default:
+		return nil
+	}
+}
+
+func checkSensitiveSlogFields(args []ast.Expr) *analysis.Diagnostic {
+	for _, arg := range args {
+		if !exprContainsSensitiveData(arg) {
+			continue
+		}
+
+		return &analysis.Diagnostic{
+			Pos:     arg.Pos(),
+			Message: SensitiveMessageDiagnostic,
+		}
+	}
+
+	return nil
+}
+
+func checkSensitiveZapFields(args []ast.Expr) *analysis.Diagnostic {
+	for _, arg := range args {
+		fieldCall, ok := arg.(*ast.CallExpr)
+		if !ok {
+			continue
+		}
+
+		for _, fieldArg := range fieldCall.Args {
+			if !exprContainsSensitiveData(fieldArg) {
+				continue
+			}
+
+			return &analysis.Diagnostic{
+				Pos:     fieldArg.Pos(),
+				Message: SensitiveMessageDiagnostic,
+			}
+		}
+	}
+
+	return nil
 }
 
 func exprContainsSensitiveData(expr ast.Expr) bool {
