@@ -35,7 +35,7 @@ func run(pass *analysis.Pass) (any, error) {
 			}
 
 			for _, diagnostic := range rules.Check(logCall, message) {
-				pass.Report(diagnostic)
+				pass.Report(*diagnostic)
 			}
 
 			return true
