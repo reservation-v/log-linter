@@ -29,10 +29,7 @@ func run(pass *analysis.Pass) (any, error) {
 				return true
 			}
 
-			message, ok := stringConstant(pass, logCall.Message)
-			if !ok {
-				return true
-			}
+			message := stringConstant(pass, logCall.Message)
 
 			for _, diagnostic := range rules.Check(logCall, message) {
 				pass.Report(*diagnostic)
@@ -45,11 +42,11 @@ func run(pass *analysis.Pass) (any, error) {
 	return nil, nil
 }
 
-func stringConstant(pass *analysis.Pass, expr ast.Expr) (string, bool) {
+func stringConstant(pass *analysis.Pass, expr ast.Expr) string {
 	tv, ok := pass.TypesInfo.Types[expr]
 	if !ok || tv.Value == nil || tv.Value.Kind() != constant.String {
-		return "", false
+		return ""
 	}
 
-	return constant.StringVal(tv.Value), true
+	return constant.StringVal(tv.Value)
 }

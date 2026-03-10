@@ -12,6 +12,11 @@ func Check(logCall matchers.LogCall, message string) []*analysis.Diagnostic {
 
 	diagnostics = append(diagnostics, CheckMessage(logCall.Message.Pos(), message)...)
 
+	diagnostic := CheckSensitive(logCall)
+	if diagnostic != nil {
+		diagnostics = append(diagnostics, diagnostic)
+	}
+
 	return diagnostics
 }
 
