@@ -2,7 +2,6 @@ package analyzer
 
 import (
 	"go/ast"
-	"go/constant"
 
 	"github.com/reservation-v/log-linter/internal/matchers"
 	"github.com/reservation-v/log-linter/internal/rules"
@@ -40,13 +39,4 @@ func run(pass *analysis.Pass) (any, error) {
 	}
 
 	return nil, nil
-}
-
-func stringConstant(pass *analysis.Pass, expr ast.Expr) string {
-	tv, ok := pass.TypesInfo.Types[expr]
-	if !ok || tv.Value == nil || tv.Value.Kind() != constant.String {
-		return ""
-	}
-
-	return constant.StringVal(tv.Value)
 }
