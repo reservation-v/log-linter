@@ -20,3 +20,8 @@ func TestAnalyzerDisableEnglish(t *testing.T) {
 
 	analysistest.Run(t, testdata, New(cfg), "disabledenglish")
 }
+
+func TestAnalyzerSuggestedFixes(t *testing.T) {
+	testdata := analysistest.TestData()
+	analysistest.RunWithSuggestedFixes(t, testdata, Analyzer, "fixes")
+}

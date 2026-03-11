@@ -86,6 +86,26 @@ Run it on the whole module:
 ./logLinter ./...
 ```
 
+## Suggested Fixes
+
+The analyzer provides `SuggestedFixes` for these rules only:
+- log message must start with a lowercase letter
+- log message must not contain special symbols or emoji
+
+The fixes are generated only for direct string literal messages. `english` and `sensitive` diagnostics are still report-only.
+
+Preview suggested fixes as a unified diff with the standalone binary:
+
+```bash
+make diff-fixes-example
+```
+
+Or run the binary directly (in project root):
+
+```bash
+./logLinter -fix -diff /path/to/your/file_or_directory
+```
+
 ## `golangci-lint` Integration
 
 This repository exposes `loglinter` as a private module plugin for `golangci-lint`.
@@ -107,7 +127,7 @@ make lint-example
 Run it on your own package or module with the built binary:
 
 ```bash
-/tmp/loglinter-custom-gcl run --config /path/to/your/.golangci.yml /path/to/your/package/...
+/tmp/loglinter-custom-gcl run --config /path/to/your/.golangci.yml /path/to/your/package
 ```
 
 The included [`.golangci.yml`](/home/phobos/golangProjects/logLinter/.golangci.yml) shows how to enable `loglinter` as a module-based custom linter.
@@ -196,3 +216,20 @@ Standalone binary output looks like this:
 /home/phobos/golangProjects/logLinter/examples/manualcheck/main.go:17:13: log message must not contain special symbols or emoji
 /home/phobos/golangProjects/logLinter/examples/manualcheck/main.go:18:13: log message must not contain potentially sensitive data
 ```
+
+Suggested fixes preview from `./logLinter -fix -diff ./examples/manualcheck` looks like this:
+
+```diff
+--- /home/phobos/golangProjects/logLinter/examples/manualcheck/main.go (old)
++++ /home/phobos/golangProjects/logLinter/examples/manualcheck/main.go (new)
+@@ -12,18 +12,18 @@
+ 	token := "token-value"
+ 	msg := "Starting from variable"
+ 
+-	slog.Info("Starting server")
++	slog.Info("starting server")
+ 	slog.Warn("запуск warning path")
+-	slog.Error("server failed...")
++	slog.Error("server failed")
+ 	slog.Debug("user password: " + password)
+ ```

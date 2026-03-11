@@ -1,7 +1,7 @@
 package rules
 
 import (
-	"go/token"
+	"go/parser"
 	"testing"
 
 	"github.com/reservation-v/log-linter/internal/config"
@@ -12,7 +12,12 @@ func TestCheckMessageDisableEnglish(t *testing.T) {
 	cfg := config.Default()
 	cfg.English = false
 
-	diagnostics := CheckMessage(cfg, token.NoPos, "запуск сервера")
+	expr, err := parser.ParseExpr(`"запуск сервера"`)
+	if err != nil {
+		t.Fatalf("ParseExpr() error = %v", err)
+	}
+
+	diagnostics := CheckMessage(cfg, expr, "запуск сервера")
 	if len(diagnostics) != 0 {
 		t.Fatalf("CheckMessage returned %d diagnostics, want 0", len(diagnostics))
 	}
