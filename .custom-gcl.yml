@@ -1,3 +1,5 @@
+name: loglinter-custom-gcl
+destination: /tmp
 version: v2.8.0
 
 plugins:

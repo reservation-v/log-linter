@@ -96,23 +96,49 @@ Build a custom `golangci-lint` binary with the plugin compiled in:
 make build-custom-gcl
 ```
 
-This uses the local [`.custom-gcl.yml`](/home/phobos/golangProjects/logLinter/.custom-gcl.yml) configuration and produces `./custom-gcl`.
+This uses the local [`.custom-gcl.yml`](/home/phobos/golangProjects/logLinter/.custom-gcl.yml) configuration and produces `/tmp/loglinter-custom-gcl`.
 
-Run the custom binary against the example package:
+Run it against the included example package:
 
 ```bash
 make lint-example
 ```
 
-Run it against the whole module:
+Run it on your own package or module with the built binary:
 
 ```bash
-make lint
+/tmp/loglinter-custom-gcl run --config /path/to/your/.golangci.yml /path/to/your/package/...
 ```
 
-The included [`.golangci.yml`](/home/phobos/golangProjects/logLinter/.golangci.yml) enables only `loglinter` and configures it as a module-based custom linter.
+The included [`.golangci.yml`](/home/phobos/golangProjects/logLinter/.golangci.yml) shows how to enable `loglinter` as a module-based custom linter.
 
 The integration entrypoint lives in [`pkg/golangci/plugin.go`](/home/phobos/golangProjects/logLinter/pkg/golangci/plugin.go) and delegates directly to the existing analyzer in [`internal/analyzer/analyzer.go`](/home/phobos/golangProjects/logLinter/internal/analyzer/analyzer.go), keeping plugin code isolated from analyzer logic.
+
+### **Config**
+
+You can disable specific checks in `golangci-lint` configuration:
+
+```yaml
+version: "2"
+
+linters:
+  settings:
+    custom:
+      loglinter:
+        type: module
+        settings:
+          disable:
+            - english
+            - sensitive
+```
+
+Supported values inside `disable`:
+- `lowercase`
+- `english`
+- `symbols`
+- `sensitive`
+
+Important: changing [`.golangci.yml`](/home/phobos/golangProjects/logLinter/.golangci.yml) only requires rerunning the built binary.
 
 ## Testing
 

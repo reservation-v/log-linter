@@ -1,4 +1,6 @@
-.PHONY: build run run-example build-custom-gcl lint-example lint test-analyzer
+CUSTOM_GCL_BIN := /tmp/loglinter-custom-gcl
+
+.PHONY: build run run-example build-custom-gcl lint-example test-analyzer
 
 build:
 	go build -o ./logLinter ./cmd/loglinter/
@@ -10,7 +12,7 @@ build-custom-gcl:
 	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2 custom
 
 lint-example: build-custom-gcl
-	./custom-gcl run ./examples/manualcheck/
+	$(CUSTOM_GCL_BIN) run ./examples/manualcheck/
 
 test-analyzer:
 	go test ./internal/analyzer -run TestAnalyzer

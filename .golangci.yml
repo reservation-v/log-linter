@@ -9,3 +9,5 @@ linters:
       loglinter:
         type: module
         description: Checks slog and zap log messages for repository log rules.
+        settings:
+          disable:
