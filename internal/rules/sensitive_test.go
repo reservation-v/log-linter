@@ -5,10 +5,14 @@ import (
 	"go/parser"
 	"testing"
 
+	"github.com/reservation-v/log-linter/internal/config"
 	"github.com/reservation-v/log-linter/internal/matchers"
 )
 
 func TestCheckSensitiveMessage(t *testing.T) {
+	cfg := config.Default()
+	keywords := sensitiveKeywords(cfg.ExtraSensitiveKeywords)
+
 	tests := []struct {
 		name string
 		expr string
@@ -53,7 +57,7 @@ func TestCheckSensitiveMessage(t *testing.T) {
 				t.Fatalf("ParseExpr(%q) error = %v", tt.expr, err)
 			}
 
-			got := CheckSensitiveMessage(expr) != nil
+			got := CheckSensitiveMessage(expr, keywords) != nil
 			if got != tt.want {
 				t.Fatalf("CheckSensitiveMessage(%q) = %v, want %v", tt.expr, got, tt.want)
 			}
@@ -61,7 +65,24 @@ func TestCheckSensitiveMessage(t *testing.T) {
 	}
 }
 
+func TestCheckSensitiveMessageCustomKeyword(t *testing.T) {
+	cfg := config.Default()
+	cfg.ExtraSensitiveKeywords = []string{"session_id"}
+
+	expr, err := parser.ParseExpr(`"session id leaked"`)
+	if err != nil {
+		t.Fatalf("ParseExpr() error = %v", err)
+	}
+
+	if CheckSensitiveMessage(expr, sensitiveKeywords(cfg.ExtraSensitiveKeywords)) == nil {
+		t.Fatal("CheckSensitiveMessage() = nil, want diagnostic for custom keyword")
+	}
+}
+
 func TestCheckSensitiveFields(t *testing.T) {
+	cfg := config.Default()
+	keywords := sensitiveKeywords(cfg.ExtraSensitiveKeywords)
+
 	tests := []struct {
 		name string
 		kind matchers.LoggerKind
@@ -116,11 +137,28 @@ func TestCheckSensitiveFields(t *testing.T) {
 				MessageIndex: 0,
 			}
 
-			got := CheckSensitiveFields(logCall) != nil
+			got := CheckSensitiveFields(logCall, keywords) != nil
 			if got != tt.want {
 				t.Fatalf("CheckSensitiveFields(%q) = %v, want %v", tt.expr, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestCheckSensitiveFieldsCustomKeyword(t *testing.T) {
+	cfg := config.Default()
+	cfg.ExtraSensitiveKeywords = []string{"client_secret_id"}
+
+	call := parseCallExpr(t, `slog.Info("request done", "client-secret-id", value)`)
+	logCall := matchers.LogCall{
+		Kind:         matchers.LoggerSlog,
+		Call:         call,
+		Message:      call.Args[0],
+		MessageIndex: 0,
+	}
+
+	if CheckSensitiveFields(logCall, sensitiveKeywords(cfg.ExtraSensitiveKeywords)) == nil {
+		t.Fatal("CheckSensitiveFields() = nil, want diagnostic for custom keyword")
 	}
 }
 

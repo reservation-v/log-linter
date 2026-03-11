@@ -11,11 +11,15 @@ func main() {
 	password := "secret"
 	token := "token-value"
 	msg := "Starting from variable"
+	action := "request"
+	result := "completed"
 
 	slog.Info("Starting server")
 	slog.Warn("запуск warning path")
 	slog.Error("server failed...")
 	slog.Debug("user password: " + password)
+	slog.Info("computer connected")
+	slog.Info("cellphone verified")
 
 	slog.InfoContext(ctx, "Started request")
 	slog.WarnContext(ctx, "ошибка request path")
@@ -29,5 +33,8 @@ func main() {
 
 	slog.Info("request done")
 	slog.Info(msg)
+	slog.Info(action + " completed")
+	slog.Info("request " + result)
 	logger.InfoContext(ctx, "request completed")
+	logger.Info("request " + result)
 }

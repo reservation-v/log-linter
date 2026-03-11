@@ -4,7 +4,8 @@ import "testing"
 
 func TestSettingsConfig(t *testing.T) {
 	settings := Settings{
-		Disable: []string{"english", "sensitive"},
+		Disable:                []string{"english", "sensitive"},
+		ExtraSensitiveKeywords: []string{"session_id", "token"},
 	}
 
 	cfg := settings.config()
@@ -19,6 +20,9 @@ func TestSettingsConfig(t *testing.T) {
 	}
 	if cfg.Sensitive {
 		t.Fatal("Sensitive = true, want false")
+	}
+	if !contains(cfg.ExtraSensitiveKeywords, "session_id") {
+		t.Fatalf("ExtraSensitiveKeywords = %v, want session_id to be present", cfg.ExtraSensitiveKeywords)
 	}
 }
 
@@ -36,7 +40,8 @@ func TestNewAcceptsNestedSettings(t *testing.T) {
 		"type":        "module",
 		"description": "test",
 		"settings": map[string]any{
-			"disable": []string{"english"},
+			"disable":                  []string{"english"},
+			"extra_sensitive_keywords": []string{"session_id"},
 		},
 	})
 	if err != nil {
@@ -50,4 +55,55 @@ func TestNewAcceptsNestedSettings(t *testing.T) {
 	if len(instance.settings.Disable) != 1 || instance.settings.Disable[0] != "english" {
 		t.Fatalf("settings.Disable = %v, want [english]", instance.settings.Disable)
 	}
+	if len(instance.settings.ExtraSensitiveKeywords) != 1 || instance.settings.ExtraSensitiveKeywords[0] != "session_id" {
+		t.Fatalf("settings.ExtraSensitiveKeywords = %v, want [session_id]", instance.settings.ExtraSensitiveKeywords)
+	}
+}
+
+func TestNewAcceptsNestedExtraSensitiveKeywordsOnly(t *testing.T) {
+	plugin, err := New(map[string]any{
+		"type":        "module",
+		"description": "test",
+		"settings": map[string]any{
+			"extra_sensitive_keywords": []string{"session_id"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("New() error = %v, want nil", err)
+	}
+
+	instance, ok := plugin.(*Plugin)
+	if !ok {
+		t.Fatalf("New() returned %T, want *Plugin", plugin)
+	}
+	if len(instance.settings.ExtraSensitiveKeywords) != 1 || instance.settings.ExtraSensitiveKeywords[0] != "session_id" {
+		t.Fatalf("settings.ExtraSensitiveKeywords = %v, want [session_id]", instance.settings.ExtraSensitiveKeywords)
+	}
+}
+
+func TestNewAcceptsTopLevelExtraSensitiveKeywords(t *testing.T) {
+	plugin, err := New(map[string]any{
+		"extra_sensitive_keywords": []string{"session_id"},
+	})
+	if err != nil {
+		t.Fatalf("New() error = %v, want nil", err)
+	}
+
+	instance, ok := plugin.(*Plugin)
+	if !ok {
+		t.Fatalf("New() returned %T, want *Plugin", plugin)
+	}
+	if len(instance.settings.ExtraSensitiveKeywords) != 1 || instance.settings.ExtraSensitiveKeywords[0] != "session_id" {
+		t.Fatalf("settings.ExtraSensitiveKeywords = %v, want [session_id]", instance.settings.ExtraSensitiveKeywords)
+	}
+}
+
+func contains(values []string, target string) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+
+	return false
 }

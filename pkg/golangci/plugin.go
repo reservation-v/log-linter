@@ -33,14 +33,16 @@ var supportedChecks = map[string]func(*config.Config){
 }
 
 type Settings struct {
-	Disable []string `json:"disable"`
+	Disable                []string `json:"disable"`
+	ExtraSensitiveKeywords []string `json:"extra_sensitive_keywords"`
 }
 
 type rawSettings struct {
-	Disable     []string `json:"disable"`
-	Type        string   `json:"type"`
-	Description string   `json:"description"`
-	Settings    Settings `json:"settings"`
+	Disable                []string `json:"disable"`
+	ExtraSensitiveKeywords []string `json:"extra_sensitive_keywords"`
+	Type                   string   `json:"type"`
+	Description            string   `json:"description"`
+	Settings               Settings `json:"settings"`
 }
 
 type Plugin struct {
@@ -75,6 +77,8 @@ func (s Settings) config() config.Config {
 		supportedChecks[name](&cfg)
 	}
 
+	cfg.ExtraSensitiveKeywords = append([]string(nil), s.ExtraSensitiveKeywords...)
+
 	return cfg
 }
 
@@ -105,11 +109,18 @@ func decodeSettings(raw any) (Settings, error) {
 		return Settings{}, err
 	}
 
-	if len(wrapper.Settings.Disable) != 0 {
+	if hasSettings(wrapper.Settings) {
 		return wrapper.Settings, nil
 	}
 
-	return Settings{Disable: wrapper.Disable}, nil
+	return Settings{
+		Disable:                wrapper.Disable,
+		ExtraSensitiveKeywords: wrapper.ExtraSensitiveKeywords,
+	}, nil
+}
+
+func hasSettings(settings Settings) bool {
+	return len(settings.Disable) != 0 || len(settings.ExtraSensitiveKeywords) != 0
 }
 
 func decode(raw any, target any) error {

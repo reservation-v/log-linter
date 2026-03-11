@@ -1,10 +1,11 @@
 package config
 
 type Config struct {
-	Lowercase bool
-	English   bool
-	Symbols   bool
-	Sensitive bool
+	Lowercase              bool
+	English                bool
+	Symbols                bool
+	Sensitive              bool
+	ExtraSensitiveKeywords []string
 }
 
 func Default() Config {

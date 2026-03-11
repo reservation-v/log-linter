@@ -14,7 +14,7 @@ func Check(cfg config.Config, logCall matchers.LogCall, message string) []*analy
 
 	diagnostics = append(diagnostics, CheckMessage(cfg, logCall.Message, message)...)
 
-	diagnostic := CheckSensitive(logCall)
+	diagnostic := CheckSensitive(logCall, cfg.ExtraSensitiveKeywords)
 	if cfg.Sensitive && diagnostic != nil {
 		diagnostics = append(diagnostics, diagnostic)
 	}

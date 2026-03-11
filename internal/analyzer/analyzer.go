@@ -10,6 +10,7 @@ import (
 )
 
 // default analyzer for ./loglinter launch
+// it can be rewritten with cfg.NeededField := false etc.
 var Analyzer = New(config.Default())
 
 func New(cfg config.Config) *analysis.Analyzer {

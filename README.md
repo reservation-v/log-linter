@@ -50,7 +50,7 @@ Supported receiver methods:
 ## Quick Start
 
 Requirements:
-- Go 1.24+
+- Go 1.25+
 
 Build the linter:
 
@@ -150,6 +150,9 @@ linters:
           disable:
             - english
             - sensitive
+          extra_sensitive_keywords:
+            - session_id
+            - client_secret
 ```
 
 Supported values inside `disable`:
@@ -157,6 +160,8 @@ Supported values inside `disable`:
 - `english`
 - `symbols`
 - `sensitive`
+
+`extra_sensitive_keywords` extends the built-in sensitive keyword list. Values are normalized before matching, so entries like `client_secret`, `client-secret`, and `ClientSecret` behave the same.
 
 Important: changing [`.golangci.yml`](/home/phobos/golangProjects/logLinter/.golangci.yml) only requires rerunning the built binary.
 
