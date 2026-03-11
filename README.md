@@ -86,6 +86,34 @@ Run it on the whole module:
 ./logLinter ./...
 ```
 
+## `golangci-lint` Integration
+
+This repository exposes `loglinter` as a private module plugin for `golangci-lint`.
+
+Build a custom `golangci-lint` binary with the plugin compiled in:
+
+```bash
+make build-custom-gcl
+```
+
+This uses the local [`.custom-gcl.yml`](/home/phobos/golangProjects/logLinter/.custom-gcl.yml) configuration and produces `./custom-gcl`.
+
+Run the custom binary against the example package:
+
+```bash
+make lint-example
+```
+
+Run it against the whole module:
+
+```bash
+make lint
+```
+
+The included [`.golangci.yml`](/home/phobos/golangProjects/logLinter/.golangci.yml) enables only `loglinter` and configures it as a module-based custom linter.
+
+The integration entrypoint lives in [`pkg/golangci/plugin.go`](/home/phobos/golangProjects/logLinter/pkg/golangci/plugin.go) and delegates directly to the existing analyzer in [`internal/analyzer/analyzer.go`](/home/phobos/golangProjects/logLinter/internal/analyzer/analyzer.go), keeping plugin code isolated from analyzer logic.
+
 ## Testing
 
 Run analyzer tests based on `analysistest`:
@@ -115,11 +143,30 @@ examples/manualcheck/  package for manual binary checks
 
 ## Example Output
 
-Typical output looks like this:
+Typical `golangci-lint` output looks like this:
 
 ```text
-examples/manualcheck/main.go:15:12: log message must start with a lowercase letter
-examples/manualcheck/main.go:16:12: log message must contain English text only
-examples/manualcheck/main.go:17:13: log message must not contain special symbols or emoji
-examples/manualcheck/main.go:18:13: log message must not contain potentially sensitive data
+examples/manualcheck/main.go:15:12: log message must start with a lowercase letter (loglinter)
+	slog.Info("Starting server")
+	          ^
+examples/manualcheck/main.go:16:12: log message must contain English text only (loglinter)
+	slog.Warn("запуск warning path")
+	          ^
+examples/manualcheck/main.go:17:13: log message must not contain special symbols or emoji (loglinter)
+	slog.Error("server failed...")
+	           ^
+examples/manualcheck/main.go:18:13: log message must not contain potentially sensitive data (loglinter)
+	slog.Debug("user password: " + password)
+	           ^
+11 issues:
+* loglinter: 11
+```
+
+Standalone binary output looks like this:
+
+```text
+/home/phobos/golangProjects/logLinter/examples/manualcheck/main.go:15:12: log message must start with a lowercase letter
+/home/phobos/golangProjects/logLinter/examples/manualcheck/main.go:16:12: log message must contain English text only
+/home/phobos/golangProjects/logLinter/examples/manualcheck/main.go:17:13: log message must not contain special symbols or emoji
+/home/phobos/golangProjects/logLinter/examples/manualcheck/main.go:18:13: log message must not contain potentially sensitive data
 ```

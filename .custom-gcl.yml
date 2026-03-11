@@ -1,0 +1,6 @@
+version: v2.8.0
+
+plugins:
+  - module: github.com/reservation-v/log-linter
+    import: github.com/reservation-v/log-linter/pkg/golangci
+    path: .

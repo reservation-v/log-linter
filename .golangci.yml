@@ -1,0 +1,11 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - loglinter
+  settings:
+    custom:
+      loglinter:
+        type: module
+        description: Checks slog and zap log messages for repository log rules.
