@@ -40,7 +40,6 @@ Supported package-level and receiver methods:
 - `ErrorContext`
 
 ### `go.uber.org/zap`
-
 Supported receiver methods:
 - `Debug`
 - `Info`
@@ -51,6 +50,15 @@ Supported receiver methods:
 
 Requirements:
 - Go 1.25+
+
+Clone the repository:
+```bash
+git clone git@github.com:reservation-v/log-linter.git
+```
+or
+```bash
+git clone https://github.com/reservation-v/log-linter.git
+```
 
 Build the linter:
 
